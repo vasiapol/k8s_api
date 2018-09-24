@@ -25,10 +25,10 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: gogs
+  name: api
 spec:
   ports:
-  - name: port-2
+  - name: port-1
     port: 5000
     nodePort: 30005
     protocol: TCP
