@@ -1,0 +1,100 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: gogs-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: gogs-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gogs-deployment
+  labels:
+    app: gogs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gogs
+  template:
+    metadata:
+      labels:
+        app: gogs
+    spec:
+      containers:
+      - name: gogs
+        image: gogs/gogs:0.11.53
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "cp -f /data1/app.ini /data/gogs/conf/ && chown -R git:git /data/ " ]
+        env:
+        - name: SOCAT_LINK
+          value: "false"
+        securityContext:
+          runAsUser: 0
+        ports:
+        - containerPort: 22
+        - containerPort: 3000
+        volumeMounts:
+        - name: gogs-data
+          mountPath: /data
+        - name: gogs-config
+          mountPath: /data1
+      initContainers:
+        - name: init-mydb
+          image: busybox:1.28
+          command: [ 'sh', "-c", "for i in $(seq 1 300); do nc -zvw1 mysql 3306 && exit 0 || sleep 3 && echo waiting for db; done; exit 1"]
+      nodeSelector:
+         name: node2
+      volumes:
+      - name: gogs-data
+        persistentVolumeClaim:
+          claimName: gogs-pvc
+      - name: gogs-config
+        configMap:
+           name: config
+           items:
+           - key: app.ini
+             path: app.ini
+             mode: 511
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gogs
+spec:
+  ports:
+  - name: port-1
+    port: 22
+    protocol: TCP
+  - name: port-2
+    port: 3000
+    nodePort: 30000
+    protocol: TCP
+  selector:
+     app: gogs
+  type: NodePort
+status:
+  loadBalancer: {}
+---
