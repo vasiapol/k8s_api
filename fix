@@ -1,0 +1,6 @@
+To solve, i use the command $ kubectl -n kube-system edit deploy metrics-server and on session spec/template/spec/containers, i add
+
+    command:
+    - /metrics-server
+    - --kubelet-insecure-tls.
+
