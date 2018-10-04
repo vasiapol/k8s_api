@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       app: api
@@ -14,7 +14,7 @@ spec:
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 50%
-  minReadySeconds: 5
+  minReadySeconds: 10
   template:
     metadata:
       labels:
@@ -38,29 +38,26 @@ spec:
             path: /
             port: http
           initialDelaySeconds: 30
-          periodSeconds: 10
-        # livenessProbe:
-        #   httpGet:
-        #     path: /api/v1/trainees
-        #     port: http
-        #   initialDelaySeconds: 30
-        #   periodSeconds: 10
----
-# kind: Service
-# apiVersion: v1
-# metadata:
-#   name: api
-# spec:
-#   ports:
-#   - name: http
-#     port: 5000
-#     nodePort: 30005
-#     protocol: TCP
-#   selector:
-#      app: api
-#   type: LoadBalancer
-# status:
-#   loadBalancer: {}
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/v1/trainees
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /api/v1/trainees
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
 ---
 kind: Service
 apiVersion: v1
