@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: vshvadchak/api_hap:latest
+        image: vshvadchak/api:latest
         ports:
           - name: http
             containerPort: 5000
