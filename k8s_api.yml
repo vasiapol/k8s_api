@@ -5,7 +5,7 @@ metadata:
   labels:
     app: api
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -22,37 +22,53 @@ spec:
     spec:
       containers:
       - name: api
-        image: vshvadchak/api:latest
+        image: vshvadchak/api_hap:latest
         ports:
           - name: http
             containerPort: 5000
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
             memory: "128Mi"
             cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
         livenessProbe:
           httpGet:
             path: /
             port: http
-          initialDelaySeconds: 10
+          initialDelaySeconds: 30
           periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     path: /api/v1/trainees
+        #     port: http
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+---
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   name: api
+# spec:
+#   ports:
+#   - name: http
+#     port: 5000
+#     nodePort: 30005
+#     protocol: TCP
+#   selector:
+#      app: api
+#   type: LoadBalancer
+# status:
+#   loadBalancer: {}
 ---
 kind: Service
 apiVersion: v1
 metadata:
   name: api
 spec:
-  ports:
-  - name: http
-    port: 5000
-    nodePort: 30005
-    protocol: TCP
   selector:
-     app: api
-  type: LoadBalancer
-status:
-  loadBalancer: {}
----
+    app: api
+  ports:
+    - port: 5000
+    # Default port for image
